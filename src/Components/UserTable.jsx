@@ -148,7 +148,7 @@ const UserTable = () => {
           justifyContent: "space-between",
         }}
       >
-        <h2>Welcome, {cookies.user || 'Guest'}!</h2> {/* Display the logged-in user or a default message */}
+        <h2 style={{ backgroundColor: "#1976d2", color: "#fff", padding: "10px", borderRadius: "4px" }}>Welcome, {cookies.user || 'Guest'}!</h2> {/* Display the logged-in user or a default message */}
         <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
           <IconButton onClick={handleFilterIconClick} color="primary">
             <FilterListIcon />
@@ -256,7 +256,7 @@ const UserTable = () => {
                           <EditIcon />
                         </IconButton>
                         <IconButton
-                          onClick={() => handleDeleteUser(user.id)}
+                          onClick={() => {if(window.confirm('Are you sure you want to delete data')){handleDeleteUser(user.id)} }}
                           color="secondary"
                         >
                           <DeleteIcon />
