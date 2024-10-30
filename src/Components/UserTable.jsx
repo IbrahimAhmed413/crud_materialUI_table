@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import LogoutIcon from '@mui/icons-material/Logout';
 import {
   Table,
   TableBody,
@@ -20,13 +22,13 @@ import {
   FormControl,
   IconButton,
 } from "@mui/material";
-import SaveIcon from '@mui/icons-material/Save';
+import SaveIcon from "@mui/icons-material/Save";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import FilterListIcon from "@mui/icons-material/FilterList";
-import { useCookies } from "react-cookie"; 
+import { useCookies } from "react-cookie";
 
-const UserTable = () => {
+const UserTable = ({ onLogout }) => {
   const [users, setUsers] = useState([]);
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
@@ -45,12 +47,19 @@ const UserTable = () => {
     phoneNumber: "",
   });
 
-  const [cookies] = useCookies(['user']); // Access the cookie that stores the username
+  const [cookies, setCookie, removeCookie] = useCookies(["user"]);
+  const navigate = useNavigate(); // Access the cookie that stores the username
 
   useEffect(() => {
     const savedUsers = JSON.parse(localStorage.getItem("users")) || [];
     setUsers(savedUsers);
   }, []);
+
+  const handleLogout = () => {
+    removeCookie("user");
+    onLogout(); // Remove the user cookie
+    navigate("/login"); // Redirect to login
+  };
 
   const handleOpenDialog = () => {
     setOpenDialog(true);
@@ -139,191 +148,220 @@ const UserTable = () => {
   };
 
   return (
-    <Paper>
-      <div
-        style={{
-          margin: "20px",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-        }}
-      >
-        <h2 style={{ backgroundColor: "#1976d2", color: "#fff", padding: "10px", borderRadius: "4px" }}>Welcome, {cookies.user || 'Guest'}!</h2> {/* Display the logged-in user or a default message */}
-        <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
-          <IconButton onClick={handleFilterIconClick} color="primary">
-            <FilterListIcon />
-          </IconButton>
-          {filterOpen && (
-            <>
-              <FormControl
-                variant="outlined"
-                style={{ minWidth: 150, marginRight: "10px" }}
-              >
-                <InputLabel>Filter By</InputLabel>
-                <Select
-                  value={filter.type}
-                  onChange={(e) =>
-                    setFilter({ ...filter, type: e.target.value })
-                  }
-                  label="Filter By"
+    <>
+      <Paper>
+        <div
+          style={{
+            margin: "20px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+          }}
+        >
+          <h2
+            style={{
+              backgroundColor: "#1976d2",
+              color: "#fff",
+              padding: "10px",
+              borderRadius: "4px",
+            }}
+          >
+            Welcome, {cookies.user || "Guest"}!
+          </h2>{" "}
+          {/* Display the logged-in user or a default message */}
+          <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+            <IconButton onClick={handleFilterIconClick} color="primary">
+              <FilterListIcon />
+            </IconButton>
+            {filterOpen && (
+              <>
+                <FormControl
+                  variant="outlined"
+                  style={{ minWidth: 150, marginRight: "10px" }}
                 >
-                  <MenuItem value="id">ID</MenuItem>
-                  <MenuItem value="name">Full Name</MenuItem>
-                  <MenuItem value="address">Address</MenuItem>
-                  <MenuItem value="phone">Phone Number</MenuItem>
-                </Select>
-              </FormControl>
+                  <InputLabel>Filter By</InputLabel>
+                  <Select
+                    value={filter.type}
+                    onChange={(e) =>
+                      setFilter({ ...filter, type: e.target.value })
+                    }
+                    label="Filter By"
+                  >
+                    <MenuItem value="id">ID</MenuItem>
+                    <MenuItem value="name">Full Name</MenuItem>
+                    <MenuItem value="address">Address</MenuItem>
+                    <MenuItem value="phone">Phone Number</MenuItem>
+                  </Select>
+                </FormControl>
 
-              <TextField
-                label="Filter"
-                variant="outlined"
-                name="value"
-                value={filter.value}
-                onChange={handleFilterChange}
-              />
-            </>
-          )}
+                <TextField
+                  label="Filter"
+                  variant="outlined"
+                  name="value"
+                  value={filter.value}
+                  onChange={handleFilterChange}
+                />
+              </>
+            )}
+          </div>
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={handleOpenDialog}
+          >
+            Add User
+          </Button>
+            <IconButton variant="contained"
+              color="secondary"
+              onClick={handleLogout}>
+              <LogoutIcon/>  
+            </IconButton>
         </div>
-        <Button variant="contained" color="primary" onClick={handleOpenDialog}>
-          Add User
-        </Button>
-      </div>
 
-      <TableContainer component={Paper}>
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell>ID</TableCell>
-              <TableCell>Full Name</TableCell>
-              <TableCell>Address</TableCell>
-              <TableCell>Phone Number</TableCell>
-              <TableCell>Actions</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {filteredUsers
-              .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-              .map((user) => (
-                <TableRow key={user.id}>
-                  <TableCell>{user.id}</TableCell>
-                  <TableCell>
-                    {editingUserId === user.id ? (
-                      <TextField
-                        name="fullName"
-                        value={editingUser.fullName}
-                        onChange={handleEditChange}
-                      />
-                    ) : (
-                      user.fullName
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    {editingUserId === user.id ? (
-                      <TextField
-                        name="address"
-                        value={editingUser.address}
-                        onChange={handleEditChange}
-                      />
-                    ) : (
-                      user.address
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    {editingUserId === user.id ? (
-                      <TextField
-                        name="phoneNumber"
-                        value={editingUser.phoneNumber}
-                        onChange={handleEditChange}
-                      />
-                    ) : (
-                      user.phoneNumber
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    {editingUserId === user.id ? (
-                      <IconButton
-                        onClick={() => handleSaveEdit(user.id)}
-                        color="primary"
-                      >
-                        <SaveIcon />
-                      </IconButton>
-                    ) : (
-                      <>
+        <TableContainer component={Paper}>
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableCell>ID</TableCell>
+                <TableCell>Full Name</TableCell>
+                <TableCell>Address</TableCell>
+                <TableCell>Phone Number</TableCell>
+                <TableCell>Actions</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {filteredUsers
+                .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+                .map((user) => (
+                  <TableRow key={user.id}>
+                    <TableCell>{user.id}</TableCell>
+                    <TableCell>
+                      {editingUserId === user.id ? (
+                        <TextField
+                          name="fullName"
+                          value={editingUser.fullName}
+                          onChange={handleEditChange}
+                        />
+                      ) : (
+                        user.fullName
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      {editingUserId === user.id ? (
+                        <TextField
+                          name="address"
+                          value={editingUser.address}
+                          onChange={handleEditChange}
+                        />
+                      ) : (
+                        user.address
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      {editingUserId === user.id ? (
+                        <TextField
+                          name="phoneNumber"
+                          value={editingUser.phoneNumber}
+                          onChange={handleEditChange}
+                        />
+                      ) : (
+                        user.phoneNumber
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      {editingUserId === user.id ? (
                         <IconButton
-                          onClick={() => handleEditClick(user)}
+                          onClick={() => handleSaveEdit(user.id)}
                           color="primary"
                         >
-                          <EditIcon />
+                          <SaveIcon />
                         </IconButton>
-                        <IconButton
-                          onClick={() => {if(window.confirm('Are you sure you want to delete data')){handleDeleteUser(user.id)} }}
-                          color="secondary"
-                        >
-                          <DeleteIcon />
-                        </IconButton>
-                      </>
-                    )}
-                  </TableCell>
-                </TableRow>
-              ))}
-          </TableBody>
-        </Table>
-      </TableContainer>
-      <TablePagination
-        rowsPerPageOptions={[5, 10]}
-        component="div"
-        count={filteredUsers.length}
-        rowsPerPage={rowsPerPage}
-        page={page}
-        onPageChange={handleChangePage}
-        onRowsPerPageChange={handleChangeRowsPerPage}
-      />
+                      ) : (
+                        <>
+                          <IconButton
+                            onClick={() => handleEditClick(user)}
+                            color="primary"
+                          >
+                            <EditIcon />
+                          </IconButton>
+                          <IconButton
+                            onClick={() => {
+                              if (
+                                window.confirm(
+                                  "Are you sure you want to delete data"
+                                )
+                              ) {
+                                handleDeleteUser(user.id);
+                              }
+                            }}
+                            color="secondary"
+                          >
+                            <DeleteIcon />
+                          </IconButton>
+                        </>
+                      )}
+                    </TableCell>
+                  </TableRow>
+                ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
+        <TablePagination
+          rowsPerPageOptions={[5, 10]}
+          component="div"
+          count={filteredUsers.length}
+          rowsPerPage={rowsPerPage}
+          page={page}
+          onPageChange={handleChangePage}
+          onRowsPerPageChange={handleChangeRowsPerPage}
+        />
 
-      <Dialog open={openDialog} onClose={handleCloseDialog}>
-        <DialogTitle>Add New User</DialogTitle>
-        <DialogContent>
-          <TextField
-            autoFocus
-            margin="dense"
-            label="Full Name"
-            type="text"
-            fullWidth
-            value={newUser.fullName}
-            onChange={(e) =>
-              setNewUser({ ...newUser, fullName: e.target.value })
-            }
-          />
-          <TextField
-            margin="dense"
-            label="Address"
-            type="text"
-            fullWidth
-            value={newUser.address}
-            onChange={(e) =>
-              setNewUser({ ...newUser, address: e.target.value })
-            }
-          />
-          <TextField
-            margin="dense"
-            label="Phone Number"
-            type="text"
-            fullWidth
-            value={newUser.phoneNumber}
-            onChange={(e) =>
-              setNewUser({ ...newUser, phoneNumber: e.target.value })
-            }
-          />
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCloseDialog} color="secondary">
-            Cancel
-          </Button>
-          <Button onClick={handleAddUser} color="primary">
-            Add
-          </Button>
-        </DialogActions>
-      </Dialog>
-    </Paper>
+        <Dialog open={openDialog} onClose={handleCloseDialog}>
+          <DialogTitle>Add New User</DialogTitle>
+          <DialogContent>
+            <TextField
+              autoFocus
+              margin="dense"
+              label="Full Name"
+              type="text"
+              fullWidth
+              value={newUser.fullName}
+              onChange={(e) =>
+                setNewUser({ ...newUser, fullName: e.target.value })
+              }
+            />
+            <TextField
+              margin="dense"
+              label="Address"
+              type="text"
+              fullWidth
+              value={newUser.address}
+              onChange={(e) =>
+                setNewUser({ ...newUser, address: e.target.value })
+              }
+            />
+            <TextField
+              margin="dense"
+              label="Phone Number"
+              type="text"
+              fullWidth
+              value={newUser.phoneNumber}
+              onChange={(e) =>
+                setNewUser({ ...newUser, phoneNumber: e.target.value })
+              }
+            />
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={handleCloseDialog} color="secondary">
+              Cancel
+            </Button>
+            <Button onClick={handleAddUser} color="primary">
+              Add
+            </Button>
+          </DialogActions>
+        </Dialog>
+      </Paper>
+    </>
   );
 };
 
